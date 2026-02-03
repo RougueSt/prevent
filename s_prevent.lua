@@ -1,6 +1,3 @@
-local timers = {}
-local coords = {}
-
 function getPlayerFromPartialName(name)
     local name = name and name:gsub("#%x%x%x%x%x%x", ""):lower() or nil
     if name then
@@ -24,7 +21,6 @@ addEventHandler('onResourceStart', getResourceRootElement(getThisResource()), fu
                 outputChatBox('--------------------------------------------', j, 230,30,30)
                         
                 outputChatBox('/wall --> Comando usado para ligar o wall hack', j, 230,230,230)
-                outputChatBox('/wall 0 --> Comando para desligar o wallhack', j, 230,230,230)
                 outputChatBox('/spec [jogador]--> para telar outro jogar e ainda funcionar o wallhack, se telar usando o spec do painel não funciona!!', j, 230,230,230)
                 outputChatBox('/spec --> para sair do spec', j, 230,230,230)
                 outputChatBox('/name --> Copia o nick do jogador no ctrl + v se o nick do cara for muito complicado ', j, 230,230,230)
@@ -44,30 +40,17 @@ local function AtivaWall(Player, comando)
 
     local conta = getAccountName(getPlayerAccount(client))
     if isObjectInACLGroup ("user."..conta, aclGetGroup ("Admin"))  then
-        if tableControl[client] == nil then
+        if not tableControl[client] then
             tableControl[client] = true
-            triggerClientEvent(client, 'nametags:prevent', client)
+            triggerClientEvent(client, 'nametags:prevent', client, true)
             local jogadores = getElementsByType('Player')
-            for i,j in ipairs(jogadores) do
-                local conta = getAccountName(getPlayerAccount(j))
-                if isObjectInACLGroup ("user."..conta, aclGetGroup ("Admin"))then
-                    --exports.hudyamasi:dm(getPlayerName(client).. ' ativou o wall', j, 30, 230, 30)
-                end
-            end
             outputServerLog(getPlayerName(client).. ' ativou o wall')
         else
             tableControl[client] = nil
             local jogadores = getElementsByType('Player')
-            for i,j in ipairs(jogadores) do
-                local conta = getAccountName(getPlayerAccount(j))
-                if isObjectInACLGroup ("user."..conta, aclGetGroup ("Admin")) then
-                    --exports.hudyamasi:dm(getPlayerName(client).. ' desativou o wall', j, 230, 30, 30)
-                end
-            end
             outputServerLog(getPlayerName(client) .. ' desativou o wall')
-            triggerClientEvent(client, 'nametags:prevent', client, '0')
+            triggerClientEvent(client, 'nametags:prevent', client, false)
             return
-
         end
     end
 end
@@ -82,7 +65,6 @@ function spec (staff, comando, player)
 
     local conta = getAccountName(getPlayerAccount(staff))
     if isObjectInACLGroup ("user."..conta, aclGetGroup ("Admin")) or isObjectInACLGroup ("user."..conta, aclGetGroup ("Console")) then
-    
         if player == nil then
             if (getCameraTarget(staff) == staff) then
                 outputChatBox('Você não está telando ninguém', staff, 230, 30, 30)
@@ -98,9 +80,6 @@ function spec (staff, comando, player)
             end
             return
         end 
-
-        
-
         local spectado = getPlayerFromPartialName(player)
         if not isElement(spectado) then
             outputChatBox('Digite o nick parcial de um jogador ou /spec para parar de telar', staff, 230, 30, 30)

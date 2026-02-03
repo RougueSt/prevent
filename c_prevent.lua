@@ -1,4 +1,5 @@
 local data = {}
+local INTERVAL = 20 --ms INCREASE TO IMPROVE PERFORMANCE
 local timer = {}
 local fontSize = 1 --FLOAT
 local font = dxCreateFont('Lato-Thin.ttf', 9, false, 'default')
@@ -19,8 +20,8 @@ function wall(comando, arg1)
         if distance < 500 then 
             Px, Py, Pz = getScreenFromWorldPosition(x, y, z)
             if Px and Py then
-                --dxDrawText(getVehicleName(j).. '| '.. math.floor(Pz).. 'm', Px+1, Py+2, Px, Py, tocolor(0,0,0), fontSize, font)
-                --dxDrawText(getVehicleName(j).. '| '.. math.floor(Pz).. 'm', Px, Py, Px, Py, tocolor(250,250,250), fontSize, font)
+                dxDrawText(getVehicleName(j).. '| '.. math.floor(Pz).. 'm', Px+1, Py+2, Px, Py, tocolor(0,0,0), fontSize, font)
+                dxDrawText(getVehicleName(j).. '| '.. math.floor(Pz).. 'm', Px, Py, Px, Py, tocolor(250,250,250), fontSize, font)
             end
                 
         end
@@ -58,7 +59,7 @@ end
 local controle
 function ligar(arg1)
 
-    if arg1 == '0' then 
+    if not arg1 then 
         removeEventHandler('onClientPreRender', root, wall)
         controle = false
         return
@@ -78,7 +79,7 @@ function camera(value)
             local x, y = guiGetScreenSize()
             data[1], data[2], data[3] = getWorldFromScreenPosition(x/2, y/2, 300)
             triggerServerEvent('camera:cords:server', root, data, source)
-        end, 20, 0, source)
+        end, INTERVAL, 0, source)
     else
         killTimer(timer[source])
         triggerServerEvent('camera:cords:server', root, false, source)
