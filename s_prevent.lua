@@ -66,6 +66,13 @@ function spec (staff, comando, player)
     local conta = getAccountName(getPlayerAccount(staff))
     if isObjectInACLGroup ("user."..conta, aclGetGroup ("Admin")) or isObjectInACLGroup ("user."..conta, aclGetGroup ("Console")) then
         if player == nil then
+            if isElementFrozen(staff) then
+                setElementFrozen(staff, false)
+                if isPedInVehicle(staff) then
+                    local vehicle = getPedOccupiedVehicle(staff)
+                    setElementFrozen(vehicle, false)
+                end -- caso o player que o staff estiver telando de disconnect
+            end
             if (getCameraTarget(staff) == staff) then
                 outputChatBox('Você não está telando ninguém', staff, 230, 30, 30)
                 return
