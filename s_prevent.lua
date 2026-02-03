@@ -111,7 +111,7 @@ function spec (staff, comando, player)
 end
 
 local function staffCam(data, staff)
-    if data then
+    if data and isElement(staff) then
         triggerClientEvent(staff, 'camera:setTarget', resourceRoot, data)
     end
 end

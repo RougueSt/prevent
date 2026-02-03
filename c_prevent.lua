@@ -78,11 +78,17 @@ function camera(value)
         timer[source] = setTimer(function(source)
             local x, y = guiGetScreenSize()
             data[1], data[2], data[3] = getWorldFromScreenPosition(x/2, y/2, 300)
+            if not isElement(source) then
+                killTimer(timer[source])
+                return
+            end
             triggerServerEvent('camera:cords:server', root, data, source)
         end, INTERVAL, 0, source)
     else
-        killTimer(timer[source])
-        triggerServerEvent('camera:cords:server', root, false, source)
+        if isTimer(timer[source]) then
+            killTimer(timer[source])
+            triggerServerEvent('camera:cords:server', root, false, source)
+        end
     end
 end
 
