@@ -54,6 +54,12 @@ All commands are restricted to:
 
 Unauthorized users will receive no response when attempting commands.
 
+### ACL Setup Command
+To grant permissions to the prevent resource, use the following command in the server console:
+```
+aclrequest allow prevent all
+```
+
 ---
 
 ## 📂 File Structure
