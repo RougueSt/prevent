@@ -1,3 +1,16 @@
+local control = {
+    wall = {},
+    spec = {},
+    play = {},
+    dim = {},
+    int = {}
+}
+
+groupsAllowed = {
+    "Admin",
+    "Console"
+}
+
 function getPlayerFromPartialName(name)
     local name = name and name:gsub("#%x%x%x%x%x%x", ""):lower() or nil
     if name then
@@ -10,21 +23,30 @@ function getPlayerFromPartialName(name)
     end
 end
 
+function permCheck(player)
+    for i, group in pairs(groupsAllowed) do
+        local conta = getAccountName(getPlayerAccount(player))
+        if isObjectInACLGroup ("user."..conta, aclGetGroup (group)) then
+            return true
+        end
+    end
+    return false
+end
+
 addEventHandler('onResourceStart', getResourceRootElement(getThisResource()), function()
     local lista = getElementsByType('player')
-        for i,j in ipairs(lista) do 
-            local conta = getAccountName(getPlayerAccount(j))
-            if isObjectInACLGroup ("user."..conta, aclGetGroup ("Admin")) or isObjectInACLGroup ("user."..conta, aclGetGroup ("Console")) then        
-                outputChatBox('Utilize os comandos:', j, 230,30,30, true)
-                outputChatBox('Script desenvolvido por #29e014Rougue#8075', j, 230,30,30, true)
-                outputChatBox('--------------------------------------------', j, 230,30,30)
+        for i,Player in ipairs(lista) do 
+            if permCheck(Player) then        
+                outputChatBox('Utilize os comandos:', Player, 230,30,30, true)
+                outputChatBox('Script desenvolvido por #29e014Rougue#8075', Player, 230,30,30, true)
+                outputChatBox('--------------------------------------------', Player, 230,30,30)
                         
-                outputChatBox('/wall --> Comando usado para ligar o wall hack', j, 230,230,230)
-                outputChatBox('/spec [jogador]--> para telar outro jogar e ainda funcionar o wallhack, se telar usando o spec do painel não funciona!!', j, 230,230,230)
-                outputChatBox('/spec --> para sair do spec', j, 230,230,230)
-                outputChatBox('/name --> Copia o nick do jogador no ctrl + v se o nick do cara for muito complicado ', j, 230,230,230)
-                outputChatBox('/spechelp --> Mostra esses comandos ', j, 230,230,230)
-                outputChatBox('--------------------------------------------\n', j, 230,30,30)
+                outputChatBox('/wall --> Comando usado para ligar o wall hack', Player, 230,230,230)
+                outputChatBox('/spec [jogador]--> para telar outro jogar e ainda funcionar o wallhack, se telar usando o spec do painel não funciona!!', Player, 230,230,230)
+                outputChatBox('/spec --> para sair do spec', Player, 230,230,230)
+                outputChatBox('/name --> Copia o nick do jogador no ctrl + v se o nick do cara for muito complicado ', Player, 230,230,230)
+                outputChatBox('/spechelp --> Mostra esses comandos ', Player, 230,230,230)
+                outputChatBox('--------------------------------------------\n', Player, 230,30,30)
             end
         end
 end)
@@ -39,42 +61,29 @@ addEventHandler('onPlayerQuit', root, function() -- prevent eventual memory leak
     end
 end)
 
-local control = {
-    wall = {},
-    spec = {},
-    dim = {},
-    int = {}
-}
-
 local function AtivaWall(Player, comando)
-    if not client then
-        client = Player
-    end
-    local conta = getAccountName(getPlayerAccount(client))
-    if isObjectInACLGroup ("user."..conta, aclGetGroup ("Admin"))  then
-        if not control.wall[client] then
-            control.wall[client] = true
-            triggerClientEvent(client, 'nametags:prevent', client, true)
+    local conta = getAccountName(getPlayerAccount(Player))
+    iprint(permCheck(Player))
+    if permCheck(Player)  then
+        if not control.wall[Player] then
+            control.wall[Player] = true
+            triggerClientEvent(Player, 'nametags:prevent', Player, true)
             local jogadores = getElementsByType('Player')
-            outputServerLog(getPlayerName(client).. ' ativou o wall')
+            outputServerLog(getPlayerName(Player).. ' ativou o wall')
         else
-            control.wall[client] = nil
+            control.wall[Player] = nil
             local jogadores = getElementsByType('Player')
-            outputServerLog(getPlayerName(client) .. ' desativou o wall')
-            triggerClientEvent(client, 'nametags:prevent', client, false)
+            outputServerLog(getPlayerName(Player) .. ' desativou o wall')
+            triggerClientEvent(Player, 'nametags:prevent', Player, false)
             return
         end
     end
 end
 
-addEvent('nametags:prevent:server', true)
-addEventHandler('nametags:prevent:server', root, AtivaWall)
-
 addCommandHandler('wall', AtivaWall, false, false)
 
 function spec (staff, comando, player)
-    local conta = getAccountName(getPlayerAccount(staff))
-    if isObjectInACLGroup ("user."..conta, aclGetGroup ("Admin")) or isObjectInACLGroup ("user."..conta, aclGetGroup ("Console")) then
+    if permCheck(staff) then
         if player == nil then
             if isElementFrozen(staff) then
                 setElementFrozen(staff, false)
@@ -134,21 +143,23 @@ function spec (staff, comando, player)
         setCameraTarget(staff, spectado)
         triggerClientEvent(spectado, 'camera:cords', staff, true)
         control.spec[staff] = true
+        control.play[staff] = spectado
         setElementAlpha(staff, 0)
         outputChatBox('Digite /spec para parar de telar jogador: '.. getPlayerName(spectado), staff, 30, 230, 30)
     end
 end
 
 local function staffCam(data, staff)
-    if not isElement(staff) then
-        return
-    end
-    local conta = getAccountName(getPlayerAccount(staff))
-    if data and isElement(staff) and (isObjectInACLGroup ("user."..conta, aclGetGroup ("Admin")) or isObjectInACLGroup ("user."..conta, aclGetGroup ("Console")) ) then
-        triggerClientEvent(staff, 'camera:setTarget', resourceRoot, data)
-    end
-    if not isObjectInACLGroup ("user."..conta, aclGetGroup ("Admin")) or not isObjectInACLGroup ("user."..conta, aclGetGroup ("Console")) then
+    if client  ~= control.play[staff] then 
         banPlayer(staff, true, false, true, 'Server', 'Banido por tentar burlar o sistema de espectate.', 0)
+        return
+    else 
+        if permCheck(staff) then
+            local conta = getAccountName(getPlayerAccount(staff))
+            if data and isElement(staff) and (permCheck(staff)) then
+                triggerClientEvent(staff, 'camera:setTarget', resourceRoot, data)
+            end
+        end
     end
 end
 
