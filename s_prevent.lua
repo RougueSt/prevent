@@ -24,8 +24,8 @@ function getPlayerFromPartialName(name)
 end
 
 function permCheck(player)
+    local conta = getAccountName(getPlayerAccount(player))
     for i, group in pairs(groupsAllowed) do
-        local conta = getAccountName(getPlayerAccount(player))
         if isObjectInACLGroup ("user."..conta, aclGetGroup (group)) then
             return true
         end
@@ -62,17 +62,13 @@ addEventHandler('onPlayerQuit', root, function() -- prevent eventual memory leak
 end)
 
 local function AtivaWall(Player, comando)
-    local conta = getAccountName(getPlayerAccount(Player))
-    iprint(permCheck(Player))
     if permCheck(Player)  then
         if not control.wall[Player] then
             control.wall[Player] = true
             triggerClientEvent(Player, 'nametags:prevent', Player, true)
-            local jogadores = getElementsByType('Player')
             outputServerLog(getPlayerName(Player).. ' ativou o wall')
         else
             control.wall[Player] = nil
-            local jogadores = getElementsByType('Player')
             outputServerLog(getPlayerName(Player) .. ' desativou o wall')
             triggerClientEvent(Player, 'nametags:prevent', Player, false)
             return
@@ -81,7 +77,7 @@ local function AtivaWall(Player, comando)
 end
 
 addCommandHandler('wall', AtivaWall, false, false)
-
+--spec player
 function spec (staff, comando, player)
     if permCheck(staff) then
         if player == nil then
@@ -90,7 +86,8 @@ function spec (staff, comando, player)
                 if isPedInVehicle(staff) then
                     local vehicle = getPedOccupiedVehicle(staff)
                     setElementFrozen(vehicle, false)
-                end -- caso o player que o staff estiver telando de disconnect
+                    setElementAlpha(vehicle, 255)
+                end
             end
             if (getCameraTarget(staff) == staff) then
                 outputChatBox('Você não está telando ninguém', staff, 230, 30, 30)
@@ -132,6 +129,7 @@ function spec (staff, comando, player)
         if isPedInVehicle(staff) then
             local vehicle = getPedOccupiedVehicle(staff)
             setElementFrozen(vehicle, true)
+            setElementAlpha(vehicle, 0)
         end
         if getElementDimension(staff) ~= getElementDimension(spectado) or getElementInterior(staff) ~= getElementInterior(spectado) then
             control.dim[staff] = getElementDimension(staff)
@@ -150,16 +148,13 @@ function spec (staff, comando, player)
 end
 
 local function staffCam(data, staff)
-    if client  ~= control.play[staff] then 
+    if client ~= control.play[staff] then 
         banPlayer(staff, true, false, true, 'Server', 'Banido por tentar burlar o sistema de espectate.', 0)
         return
-    else 
-        if permCheck(staff) then
-            local conta = getAccountName(getPlayerAccount(staff))
-            if data and isElement(staff) and (permCheck(staff)) then
-                triggerClientEvent(staff, 'camera:setTarget', resourceRoot, data)
-            end
-        end
+    end
+    
+    if permCheck(staff) and data and isElement(staff) then
+        triggerClientEvent(staff, 'camera:setTarget', resourceRoot, data)
     end
 end
 
@@ -169,28 +164,12 @@ addEventHandler('camera:cords:server', root, staffCam)
 addCommandHandler('spec', spec, false, false)
 
 addCommandHandler('name', function(staff)
-    local conta = getAccountName(getPlayerAccount(staff))
-    if isObjectInACLGroup ("user."..conta, aclGetGroup ("Admin")) or isObjectInACLGroup ("user."..conta, aclGetGroup ("Console")) then    
-        if (getCameraTarget(staff) == staff) or getPedOccupiedVehicle(staff) == getCameraTarget(staff) then
-            outputChatBox('Você não está telando ninguem', staff, 230, 30, 30)
-            return 
-        end
-        triggerClientEvent(staff, 'copiar:nome', staff, getPlayerName(getCameraTarget(staff)))
+    if not permCheck(staff) then return end
+    
+    if getCameraTarget(staff) == staff or getPedOccupiedVehicle(staff) == getCameraTarget(staff) then
+        outputChatBox('Você não está telando ninguem', staff, 230, 30, 30)
+        return 
     end
+    
+    triggerClientEvent(staff, 'copiar:nome', staff, getPlayerName(getCameraTarget(staff)))
 end, false, false)
-
-addCommandHandler('spechelp', function(j)
-    local conta = getAccountName(getPlayerAccount(j))
-    if isObjectInACLGroup ("user."..conta, aclGetGroup ("Admin")) or isObjectInACLGroup ("user."..conta, aclGetGroup ("Console")) then
-        outputChatBox('Utilize os comandos: \n', j, 230,30,30, true)
-                outputChatBox('--------------------------------------------', j, 230,30,30)
-                        
-                outputChatBox('/wall --> Comando usado para ligar o wall hack', j, 230,230,230)
-                outputChatBox('/wall 0 --> Comando para desligar o wallhack', j, 230,230,230)
-                outputChatBox('/spec [jogador]--> para telar outro jogar e ainda funcionar o wallhack, se telar usando o spec do painel não funciona!!', j, 230,230,230)
-                outputChatBox('/spec --> para sair do spec', j, 230,230,230)
-                outputChatBox('/name --> Copia o nick do jogador no ctrl + v se o nick do cara for muito complicado ', j, 230,230,230)
-                outputChatBox('--------------------------------------------\n', j, 230,30,30)
-
-    end
-end)
