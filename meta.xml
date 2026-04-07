@@ -7,4 +7,5 @@
         <right name="function.banPlayer" access="true"></right>
     </aclrequest>
     <file src="Lato-Thin.ttf"/>
+    <file src="icon/*"/>
 </meta>
