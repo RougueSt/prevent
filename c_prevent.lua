@@ -3,6 +3,7 @@ local INTERVAL = 20 --ms INCREASE TO IMPROVE PERFORMANCE
 local timer = {}
 local fontSize = 1 --FLOAT
 local font = dxCreateFont('Lato-Thin.ttf', 9, false, 'default')
+local screenX, screenY = guiGetScreenSize()
 
 
 function wall(comando, arg1)
@@ -80,6 +81,7 @@ function camera(value)
         timer[source] = setTimer(function(source)
             local x, y = guiGetScreenSize()
             data[1], data[2], data[3] = getWorldFromScreenPosition(x/2, y/2, 300)
+            data[4] = (getPedControlState(localPlayer, 'aim_weapon') and (getPedWeapon(localPlayer) ~= 0)) or false
             if not isElement(source) or (source == getResourceRootElement())then
                 killTimer(timer[source])
                 return
@@ -94,8 +96,26 @@ function camera(value)
     end
 end
 
+local function drawAim()
+    dxDrawImage(screenX/2 + 0, screenY/2 - 45, 16, 16, 'icon/aim.png', 0, 0, 0, tocolor(255,255,255))
+    dxDrawImage(screenX/2 + 16, screenY/2 - 45, 16, 16, 'icon/aim.png', 90, 0, 0, tocolor(255,255,255))
+    dxDrawImage(screenX/2 + 16, screenY/2 - 30, 16, 16, 'icon/aim.png', 180, 0, 0, tocolor(255,255,255))
+    dxDrawImage(screenX/2 + 0, screenY/2 - 30, 16, 16, 'icon/aim.png', 270, 0, 0, tocolor(255,255,255))
+end
+
+--getWorldFromScreenPosition(screenX/2 + 38 , screenY/2 - 77, 300)
+
+local draw = false
 function staffCam(data)
     setCameraTarget(data[1], data[2], data[3])
+    if data[4] and not wasAdded then
+        addEventHandler('onClientRender', root, drawAim)
+        wasAdded = true
+    end
+    if not data[4] and wasAdded then
+        removeEventHandler('onClientRender', root, drawAim)
+        wasAdded = false
+    end
 end
 
 addEvent('camera:setTarget', true)
@@ -119,4 +139,8 @@ addEventHandler('copiar:nome',root, copiarNome)
 
 addEventHandler('onClientPlayerSpawn', localPlayer, function()
     removeEventHandler('onClientPreRender', root, wall)
+end)
+
+addEventHandler('onClientResourceStop', resourceRoot, function()
+    killTimer(timer[source]) -- ATTEMPT TO FIX BUG THAT BAN STAFF IF THE RESOURCE IS STOPPED WHILE SPECTATING NOT WORKED AS INTENDED
 end)
