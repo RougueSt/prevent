@@ -147,9 +147,9 @@ function spec (staff, comando, player)
     end
 end
 
-local function staffCam(data, staff)
+local function staffCam(data, staff) --There are a bug, if the staff is spectating and the resource is stopped, Staff it self get banned
     if client ~= control.play[staff] then 
-        banPlayer(staff, true, false, true, 'Server', 'Banido por tentar burlar o sistema de espectate.', 0)
+        --banPlayer(staff, true, false, true, 'Server', 'Banido por tentar burlar o sistema de espectate.', 0)
         return
     end
     
